@@ -21,7 +21,7 @@ You will need to commit any changes you've made to your forked repository before
 Using Terminal or Git Bash, change into the directory that contains the local copy of your forked repository.
 
 ```sh
-cd path/to/my/repo
+cd path/to/my/repo (this is not a real code)
 ```
 
 Before you fetch, you need to check if any files have changed because you will need to commit these files before you can fetch changes to the class repo from Github.
