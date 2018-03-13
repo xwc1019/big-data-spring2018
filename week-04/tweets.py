@@ -34,7 +34,7 @@ def get_tweets(
     write = False
   ):
   tweet_count = 0
-  # all_tweets = pd.DataFrame()
+  all_tweets = pd.DataFrame()
   while tweet_count < tweet_max:
     try:
       if (max_id <= 0):
@@ -71,33 +71,36 @@ def get_tweets(
         print("No more tweets found")
         break
       for tweet in new_tweets:
-        # all_tweets = all_tweets.append(parse_tweet(tweet), ignore_index = True)
-        if write == True:
-            with open(out_file, 'w') as f:
-                f.write(jsonpickle.encode(tweet._json, unpicklable=False) + '\n')
-      max_id = new_tweets[-1].id
+        all_tweets = all_tweets.append(parse_tweet(tweet), ignore_index = True)
+        max_id = new_tweets[-1].id
       tweet_count += len(new_tweets)
     except tweepy.TweepError as e:
       # Just exit if any error
       print("Error : " + str(e))
       break
   print (f"Downloaded {tweet_count} tweets.")
+  # if write == True:
+  #     all_tweets.to_json(out_file)
+  return all_tweets
 
-latlng = '42.359416,-71.093993'
-
+# Set a Lat Lon
+latlng = '42.359416,-71.093993' # Eric's office (ish)
+# Set a search distance
 radius = '1mi'
-
-geocode_query = latlng+ ',' +radius
-
-file_name = 'data/tweeets.json'
-
+# See tweepy API reference for format specifications
+geocode_query = latlng + ',' + radius
+# set output file location
+file_name = 'data/tweets.json'
+# set threshold number of Tweets. Note that it's possible
+# to get more than one
 t_max = 200
 
-get_tweets(
+tweets = get_tweets(
   geo = geocode_query,
   tweet_max = t_max,
   write = True,
-  out_file = file_name)
+  out_file = file_name )
+
 
 def parse_tweet(tweet):
   p = pd.Series()
@@ -115,14 +118,6 @@ def parse_tweet(tweet):
   p['time'] = str(tweet.created_at)
   return p
 
-all_tweets = pd.DataFrame()
-all_tweets = all_tweets.append(parse_tweet(tweet), ignore_index = True)
-return get_tweets
-
-
-
-
-get_tweets(geo = geocode_query, tweet_max = t_max, write = True, out_file = file_name)
 
 df = pd.read_json('path/example_json.json')
 
@@ -132,6 +127,7 @@ import matplotlib.pyplot as plt
 
 tweets.dtypes
 tweets['location'].unique()
+
 loc_tweets = tweets[tweets['location'] != '']
 count_tweets = loc_tweets.groupby('location')['id'].count()
 df_count_tweets = count_tweets.to_frame()
@@ -139,3 +135,34 @@ df_count_tweets
 df_count_tweets.columns
 df_count_tweets.columns = ['count']
 df_count_tweets
+
+df_count_tweets.sort_index
+
+colors = ["#697dc6","#5faf4c","#7969de","#b5b246",
+          "#cc54bc","#4bad89","#d84577","#4eacd7",
+          "#cf4e33","#894ea8","#cf8c42","#d58cc9",
+          "#737632","#9f4b75","#c36960"]
+
+plt.pie(df_count_tweets['count'],labels=df_count_tweets.index.get_values(), shadow = False, colors = colors)
+
+plt.axis('equal')
+plt.tight_layout
+plt.show()
+
+tweets_geo = tweets[tweets['lon'].notnull()& tweets['lat'].notnull()]
+len(tweets_geo)
+len(tweets)
+
+plt.scatter(tweets_geo['lon'],tweets_geo['lat'], s = 25)
+
+bos_list = tweets[tweets['location'].str.contains('Boston')]['location']
+print(bos_list)
+
+tweets['location'].replace(bos_list,'Boston,MA', inplace = True)
+tweets['location'].unique()
+
+tweets[tweets.duplicated(subset = 'content', keep = False)]
+
+tweets.drop_duplicates(subset = 'content', keep = False, inplace = True)
+
+tweets.to_csv('twitter_data.csv', sep = ',', encoding = 'utf-8')
